@@ -51,22 +51,22 @@ def solve_tsp(input_folder, output_folder, name):
 def image_to_tsp_routed():
     input_folder = 'input/'
     output_folder = 'output/'
-    name = 'beeg.jpg'
+    name = 'rocket.jpg'
     k = 1024
     iterations = 10000
     im_arr = image_to_array(load_image(input_folder + name))
     # output_img = array_to_image(im_arr)
     output_img = tractor_beam(im_arr, k=k, iterations=iterations)
-    #output_img.save(output_folder + name)
+    array_to_image(output_img).save(output_folder + "dotted_" + name)
     img, nodes = parse_to_tsp_file(input_folder, name, array_to_tsp_nodes(output_img))
-    solution = solve_tsp(input_folder, output_folder, name.split('.')[0] + '.tsp').tour
-    solution += solution[0]
+    solution = solve_tsp(input_folder, output_folder, name.split('.')[0] + '.tsp').tour.tolist()
+    solution.append(solution[0])
     im = Image.new('RGB', img.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(im)
     for i, node in enumerate(solution[:-1]):
         node1 = nodes[node]
         node2 = nodes[solution[i+1]]
-        draw.line((node1[0], node1[1], node2[0], node2[1]), fill=128)
+        draw.line((node1[1], node1[0], node2[1], node2[0]), fill=128)
     im.save(output_folder + name.split('.')[0] + '.jpg')
 
 
