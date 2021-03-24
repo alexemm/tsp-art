@@ -32,11 +32,11 @@ def get_header(f, name, dim):
     return lines
 
 
-def parse_to_tsp_file(input_folder, name, nodes):
+def parse_to_tsp_file(input_folder, name, nodes, k):
     print(nodes)
     img = load_image(input_folder + name)
     #nodes = image_to_tsp_nodes(img)
-    with open(input_folder + name.split('.')[0] + ".tsp", 'w') as f:
+    with open(input_folder + name.split('.')[0] + f"_{k}" + ".tsp", 'w') as f:
         lines = get_header(f, name, len(nodes))
         lines += ["%i %i %i\n" % (i, point[0], point[1]) for i, point in enumerate(nodes)]
         f.writelines(lines)
@@ -88,13 +88,13 @@ def image_to_tsp_routed():
     input_folder = 'input/'
     output_folder = 'output/'
     name = 'jesus_close.jpg'
-    k = 8192
-    iterations = 40000
+    k = 5
+    iterations = 5
     im_arr = image_to_array(load_image(input_folder + name))
     # output_img = array_to_image(im_arr)
     output_img = tractor_beam(im_arr, k=k, iterations=iterations)
     array_to_image(output_img).save(output_folder + f"dotted_{k}_" + name)
-    img, nodes = parse_to_tsp_file(input_folder, name, array_to_tsp_nodes(output_img))
+    img, nodes = parse_to_tsp_file(input_folder, name.split('.')[0] + '.jpg', array_to_tsp_nodes(output_img), k)
     solution = solve_tsp(input_folder, name.split('.')[0] + f'_{k}' + '.tsp').tour.tolist()
     solution.append(solution[0])
     im = create_tsp_art(nodes, solution, img.size)
