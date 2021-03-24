@@ -88,18 +88,18 @@ def image_to_tsp_routed():
     input_folder = 'input/'
     output_folder = 'output/'
     name = 'jesus_close.jpg'
-    k = 4096
-    iterations = 10000
+    k = 8192
+    iterations = 40000
     im_arr = image_to_array(load_image(input_folder + name))
     # output_img = array_to_image(im_arr)
     output_img = tractor_beam(im_arr, k=k, iterations=iterations)
-    array_to_image(output_img).save(output_folder + "dotted_" + name)
+    array_to_image(output_img).save(output_folder + f"dotted_{k}_" + name)
     img, nodes = parse_to_tsp_file(input_folder, name, array_to_tsp_nodes(output_img))
-    solution = solve_tsp(input_folder, name.split('.')[0] + '.tsp').tour.tolist()
+    solution = solve_tsp(input_folder, name.split('.')[0] + f'_{k}' + '.tsp').tour.tolist()
     solution.append(solution[0])
     im = create_tsp_art(nodes, solution, img.size)
-    im.save(output_folder + name.split('.')[0] + '.jpg')
+    im.save(output_folder + name.split('.')[0] + f'_{k}' + '.jpg')
 
 
-#image_to_tsp_routed()
-create_tsp_art_from_partial_solutions("input/jesus_close.tsp", (169, 210))
+image_to_tsp_routed()
+#create_tsp_art_from_partial_solutions("input/jesus_close_4096.tsp", (169, 210))
