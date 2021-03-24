@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from PIL import Image, ImageDraw
 from concorde.tsp import TSPSolver
 from dotter.stippler import tractor_beam
-from os import listdir
+from os import listdir, makedirs
 
 
 def load_image(file: str):
@@ -46,17 +46,16 @@ def parse_to_tsp_file(input_folder, name, nodes):
 def solve_tsp(input_folder, name):
     solver = TSPSolver.from_tspfile(input_folder + name)
     solution = solver.solve()
-    #with open(output_folder + name.split('.')[0] +'.txt', 'w') as f:
-    #    f.write(str(solution.tour))
     return solution
 
 
-def read_solution_file(file_name: str) -> List[int]:
-    pass
+def read_solution_file(file_name: str, skiph: int = 1) -> List[int]:
+    with open(file_name) as f:
+        return [int(entry) for line in f.read().splitlines()[skiph:] for entry in line.split(" ") if entry != '']
 
 
 def get_solution_files_of_tsp(directory) -> List[str]:
-    return [file for file in listdir(directory) if file.split(".")[-1] == '.sol']
+    return [file for file in listdir(directory) if file.split(".")[-1] == 'sol']
 
 
 def create_tsp_art(nodes, solution_tour, size) -> Image:
@@ -69,9 +68,20 @@ def create_tsp_art(nodes, solution_tour, size) -> Image:
     return im
 
 
-def create_tsp_art_from_partial_solutions() -> None:
-    for i, sol in enumerate(get_solution_files_of_tsp('')):
+def read_tsp_file(file: str, skiph: int = 5) -> List[Tuple[float, float]]:
+    with open(file) as f:
+        return [(float(line.split(" ")[1]), float(line.split(" ")[2])) for line in f.read().splitlines()[skiph:]]
+
+
+def create_tsp_art_from_partial_solutions(tsp_file: str, size) -> None:
+    nodes = read_tsp_file(tsp_file)
+    output_dir: str = f"output/{tsp_file.split('.')[-2].split('/')[-1]}/{len(nodes)}/"
+    try:
+        makedirs(output_dir)
+    except FileExistsError:
         pass
+    for i, sol in enumerate(get_solution_files_of_tsp('.')):
+        create_tsp_art(nodes, read_solution_file(sol), size).save(output_dir + f'{i}' + '.jpg')
 
 
 def image_to_tsp_routed():
@@ -87,8 +97,9 @@ def image_to_tsp_routed():
     img, nodes = parse_to_tsp_file(input_folder, name, array_to_tsp_nodes(output_img))
     solution = solve_tsp(input_folder, name.split('.')[0] + '.tsp').tour.tolist()
     solution.append(solution[0])
-    im = create_tsp_art(img.size)
+    im = create_tsp_art(nodes, solution, img.size)
     im.save(output_folder + name.split('.')[0] + '.jpg')
 
 
-image_to_tsp_routed()
+#image_to_tsp_routed()
+create_tsp_art_from_partial_solutions("input/jesus_close.tsp", (169, 210))
