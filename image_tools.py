@@ -33,7 +33,6 @@ def get_header(f, name, dim):
 
 
 def parse_to_tsp_file(input_folder, name, nodes, k):
-    print(nodes)
     img = load_image(input_folder + name)
     #nodes = image_to_tsp_nodes(img)
     with open(input_folder + name.split('.')[0] + f"_{k}" + ".tsp", 'w') as f:
@@ -61,9 +60,10 @@ def get_solution_files_of_tsp(directory) -> List[str]:
 def create_tsp_art(nodes, solution_tour, size) -> Image:
     im = Image.new('RGB', size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(im)
-    for i, node in enumerate(solution_tour[:-1]):
+    circle = solution_tour + [solution_tour[0]]
+    for i, node in enumerate(circle[:-1]):
         node1 = nodes[node]
-        node2 = nodes[solution_tour[i + 1]]
+        node2 = nodes[circle[i + 1]]
         draw.line((node1[1], node1[0], node2[1], node2[0]), fill=128)
     return im
 
@@ -75,31 +75,33 @@ def read_tsp_file(file: str, skiph: int = 5) -> List[Tuple[float, float]]:
 
 def create_tsp_art_from_partial_solutions(tsp_file: str, size) -> None:
     nodes = read_tsp_file(tsp_file)
-    output_dir: str = f"output/{tsp_file.split('.')[-2].split('/')[-1]}/{len(nodes)}/"
+    output_dir: str = f"output/{tsp_file.split('.')[-2].split('/')[-1]}/"
     try:
         makedirs(output_dir)
     except FileExistsError:
         pass
     for i, sol in enumerate(get_solution_files_of_tsp('.')):
+        print(f"Solution {i}")
         create_tsp_art(nodes, read_solution_file(sol), size).save(output_dir + f'{i}' + '.jpg')
 
 
 def image_to_tsp_routed():
     input_folder = 'input/'
     output_folder = 'output/'
-    name = 'jesus_close.jpg'
-    k = 5
-    iterations = 5
+    name = 'baba.jpg'
+    k = 4096
+    iterations = 10000
     im_arr = image_to_array(load_image(input_folder + name))
     # output_img = array_to_image(im_arr)
     output_img = tractor_beam(im_arr, k=k, iterations=iterations)
     array_to_image(output_img).save(output_folder + f"dotted_{k}_" + name)
     img, nodes = parse_to_tsp_file(input_folder, name.split('.')[0] + '.jpg', array_to_tsp_nodes(output_img), k)
     solution = solve_tsp(input_folder, name.split('.')[0] + f'_{k}' + '.tsp').tour.tolist()
-    solution.append(solution[0])
+    #solution.append(solution[0])
     im = create_tsp_art(nodes, solution, img.size)
     im.save(output_folder + name.split('.')[0] + f'_{k}' + '.jpg')
 
 
-image_to_tsp_routed()
+if __name__ == "__main__":
+    image_to_tsp_routed()
 #create_tsp_art_from_partial_solutions("input/jesus_close_4096.tsp", (169, 210))
