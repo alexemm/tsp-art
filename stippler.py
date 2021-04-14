@@ -1,7 +1,7 @@
 from random import choices, seed
-from typing import List, Tuple
 
 import numpy as np
+import argparse
 
 
 def get_probability_matrix(arr):
@@ -29,12 +29,7 @@ def choose_next_point(prob_arr_2d, prev_shape):
 def create_dotted_array(chosen_points, arr):
     dotted_arr = np.zeros(arr.shape) + 255
     for point in chosen_points:
-        try:
-            dotted_arr[point[1], point[0]] = 0
-        except IndexError:
-            print(point)
-            print('exit')
-            exit()
+        dotted_arr[point[1], point[0]] = 0
     return dotted_arr
 
 
@@ -58,16 +53,11 @@ def tractor_beam(arr, k, iterations=10):
     prob_matr = prob_matr.flatten()
     p, values = choose_k_points(prob_matr, k, prev_shape)
     n = np.zeros(len(p))
-    #prob_matr[values] = 0.
-    #prob_matr = prob_matr.reshape(prev_shape)
-    #print(prob_matr)
     for iteration in range(iterations):
         # 1. Select tractor beam point
         w = choose_next_point(prob_matr, prev_shape)[0]
         # 2. Find closest point to tractor beam point
         i = find_closest_point(p, w)
-        #print("P"+str(p[i]))
-        #print("W"+str(w))
         # 3.
         n[i] += 1
         p[i] = int(round(1./(n[i] + 1.) * w[0] + n[i]/float(n[i] + 1.) * p[i][0])), \
@@ -76,3 +66,18 @@ def tractor_beam(arr, k, iterations=10):
         if iteration % 100 == 0 or iterations/2 == iteration:
             print(iteration)
     return create_dotted_array(p, arr)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_file", help="File input")
+    parser.add_argument("k", help="Number of dots in image", type=int)
+    parser.add_argument("out_dir", help="Output directory")
+    parser.add_argument("-it", "--iterations", help="Number of iterations to clean image. Default is 10000", type=int)
+    parser.add_argument("-st", "--steps", help="Number of intermediate steps after", type=int)
+    parser.add_argument("--seed", help="Random seed")
+    args = parser.parse_args()
+
+
+if __name__ == '__main__':
+    main()

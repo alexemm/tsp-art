@@ -3,7 +3,7 @@ from typing import List, Tuple
 import numpy as np
 from PIL import Image, ImageDraw
 from concorde.tsp import TSPSolver
-from dotter.stippler import tractor_beam
+from stippler import tractor_beam
 from os import listdir, makedirs
 
 
@@ -64,7 +64,7 @@ def create_tsp_art(nodes, solution_tour, size) -> Image:
     for i, node in enumerate(circle[:-1]):
         node1 = nodes[node]
         node2 = nodes[circle[i + 1]]
-        draw.line((node1[1], node1[0], node2[1], node2[0]), fill=128)
+        draw.line((node1[1], node1[0], node2[1], node2[0]), fill="black")
     return im
 
 
@@ -85,6 +85,11 @@ def create_tsp_art_from_partial_solutions(tsp_file: str, size) -> None:
         create_tsp_art(nodes, read_solution_file(sol), size).save(output_dir + f'{i}' + '.jpg')
 
 
+def get_size_of_image():
+    # TODO: get size optionally by getting the maximum (or minimum idk) values from the nodes
+    pass
+
+
 def solve_tsp_problem_and_create_art(input_folder, output_folder, name, nodes, size, k):
     solution = solve_tsp(input_folder, name.split('.')[0] + f'_{k}' + '.tsp').tour.tolist()
     # solution.append(solution[0])
@@ -95,22 +100,18 @@ def solve_tsp_problem_and_create_art(input_folder, output_folder, name, nodes, s
 def image_to_tsp_routed():
     input_folder = 'input/'
     output_folder = 'output/'
-    name = 'baba.jpg'
-    k = 40000
+    name = 'pepe_cut_smol.jpg'
+    k = 4096
     iterations = 200000
     im_arr = image_to_array(load_image(input_folder + name))
     # output_img = array_to_image(im_arr)
     output_img = tractor_beam(im_arr, k=k, iterations=iterations)
-    array_to_image(output_img).save(output_folder + f"dotted_{k}_" + name)
+    array_to_image(output_img).save(output_folder + f"dotted_{k}_{iterations}_" + name)
     img, nodes = parse_to_tsp_file(input_folder, name.split('.')[0] + '.jpg', array_to_tsp_nodes(output_img), k)
     solve_tsp_problem_and_create_art(input_folder, output_folder, name, nodes, img.size, k)
-    #solution = solve_tsp(input_folder, name.split('.')[0] + f'_{k}' + '.tsp').tour.tolist()
-    #solution.append(solution[0])
-    #im = create_tsp_art(nodes, solution, img.size)
-    #im.save(output_folder + name.split('.')[0] + f'_{k}' + '.jpg')
 
 
 if __name__ == "__main__":
-    solve_tsp_problem_and_create_art('input/', 'output', 'baba.jpg', read_tsp_file('input/baba_40000.tsp'), (251,356), 40000)
-    #image_to_tsp_routed()
+    #solve_tsp_problem_and_create_art('input/', 'output/', 'baba.jpg', read_tsp_file('input/baba_40000.tsp'), (251,356), 40000)
+    image_to_tsp_routed()
 #create_tsp_art_from_partial_solutions("input/jesus_close_4096.tsp", (169, 210))
