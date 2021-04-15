@@ -1,10 +1,8 @@
+from argparse import ArgumentParser
 from collections import OrderedDict
-from random import choices
 from typing import Optional
 
 import numpy as np
-import argparse
-
 from PIL import ImageDraw, ImageFont
 
 from image_tools import image_to_array, load_image, array_to_image
@@ -14,7 +12,7 @@ def get_probability_matrix(arr):
     return (255. - arr) / (255. - arr).sum()
 
 
-def determine_datapoint_from_int(i, arr, prev_shape):
+def determine_datapoint_from_int(i, prev_shape):
     x = int(i % prev_shape[1])
     y = int(i / prev_shape[1])
     return x, y
@@ -22,14 +20,8 @@ def determine_datapoint_from_int(i, arr, prev_shape):
 
 def choose_k_points(prob_arr_2d, k, prev_shape):
     chosen_data_values = np.random.choice(range(prob_arr_2d.size), size=k, p=prob_arr_2d.flatten(), replace=False)
-    chosen_data_points = [determine_datapoint_from_int(i, prob_arr_2d, prev_shape) for i in chosen_data_values]
+    chosen_data_points = [determine_datapoint_from_int(i, prev_shape) for i in chosen_data_values]
     return chosen_data_points, chosen_data_values
-
-
-def choose_next_point(prob_arr_2d, prev_shape):
-    chosen_data_values = choices(range(prob_arr_2d.size), k=1, weights=prob_arr_2d.flatten())
-    chosen_data_points = [determine_datapoint_from_int(i, prob_arr_2d, prev_shape) for i in chosen_data_values]
-    return chosen_data_points
 
 
 def create_dotted_array(chosen_points, shape):
@@ -64,18 +56,18 @@ def tractor_beam(arr, k, iterations: Optional[int] = None, intermediate_steps: O
     intermediates = OrderedDict() if intermediate_steps is not None else None
     for iteration in range(iterations):
         # 1. Select tractor beam point
-        #w = choose_next_point(prob_matr, prev_shape)[0]
         w = choose_k_points(prob_matr, 1, prev_shape)[0][0]
         # 2. Find closest point to tractor beam point
         i = find_closest_point(p, w)
-        # 3.
+        # 3. Increment counter for point
         n[i] += 1
-        #print(p[i][0] - int(round(1. / (n[i] + 1.) * w[0] + n[i] / float(n[i] + 1.) * p[i][0])) == 0)
+        # 4. Adjust point
         p[i] = int(round(1. / (n[i] + 1.) * w[0] + n[i] / float(n[i] + 1.) * p[i][0])), \
                int(round(1. / (n[i] + 1.) * w[1] + n[i] / float(n[i] + 1.) * p[i][1]))
-
+        # Print iterations
         if iteration % 100 == 0 or iterations / 2 == iteration:
             print(iteration)
+        # Store side steps for visualization later
         if iteration % intermediate_result_steps == 0 and intermediate_steps is not None:
             intermediates[iteration] = p.copy()
     intermediates[iterations] = p
@@ -96,8 +88,8 @@ def get_header(name, dim):
     return lines
 
 
-def define_arguments():
-    parser = argparse.ArgumentParser()
+def define_arguments() -> ArgumentParser:
+    parser = ArgumentParser()
     parser.add_argument("input_file", help="File input")
     parser.add_argument("k", help="Number of dots in image", type=int)
     parser.add_argument("out_dir", help="Output directory")
@@ -105,38 +97,40 @@ def define_arguments():
     parser.add_argument("-st", "--steps", help="Number of intermediate steps which will be printed in to an image",
                         type=int)
     # parser.add_argument("--seed", help="Random seed")
-    return parser.parse_args()
+    return parser
 
 
-def add_iteration_to_corner(im, text):
+def add_iteration_text_to_corner(im, text):
     draw = ImageDraw.Draw(im)
     font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 20)
     draw.text((0, 0), text, 0, font=font)
-
     return im
 
 
 def create_timelapse_gif(out_name, intermediate_steps, shape):
-    #print([st for st in intermediate_steps])
     im = array_to_image(create_dotted_array(intermediate_steps[0], shape))
-    im_arr = [add_iteration_to_corner(array_to_image(create_dotted_array(st, shape)),"Iteration: " + str(it)) for it, st in intermediate_steps.items()]
+    im_arr = [add_iteration_text_to_corner(array_to_image(create_dotted_array(st, shape)), "Iteration: " + str(it)) for
+              it, st in intermediate_steps.items()]
     im.save(out_name, save_all=True, append_images=im_arr, loop=0, duration=200)
 
 
-def main():
-    args = define_arguments()
+def stippling(im_arr: np.ndarray, k: int, filename: str, out_dir: str, iterations: Optional[int], steps: Optional[int]):
+    nodes, intermediate_nodes = tractor_beam(im_arr, k, iterations, steps)
+    # Save picture
+    array_to_image(create_dotted_array(nodes, im_arr.shape)).save(out_dir + str(k) + filename)
+    # Save tsp-file
+    write_tsp_file(out_dir + filename.split('.')[0] + str(k) + '.tsp', nodes)
+    # Show all the intermediate steps
+    if steps is not None:
+        create_timelapse_gif(out_dir + filename.split('.')[0] + '.gif', intermediate_nodes, im_arr.shape)
+
+
+def main(parsed_arguments):
+    args = parsed_arguments
     filename = args.input_file.split('/')[-1]
     im_arr = image_to_array(load_image(args.input_file))
-    shape = im_arr.shape
-    nodes, intermediate_nodes = tractor_beam(im_arr, args.k, args.iterations, args.steps)
-    # Save picture
-    array_to_image(create_dotted_array(nodes, shape)).save(args.out_dir + str(args.k) + filename)
-    # Save tsp-file
-    write_tsp_file(args.out_dir + filename.split('.')[0] + str(args.k) + '.tsp', nodes)
-    # Show all the intermediate steps
-    if args.steps is not None:
-        create_timelapse_gif(args.out_dir + filename.split('.')[0] + '.gif', intermediate_nodes, shape)
+    stippling(im_arr, args.k, filename, args.out_dir, args.iterations, args.steps)
 
 
 if __name__ == '__main__':
-    main()
+    main(define_arguments().parse_args())
