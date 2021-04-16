@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 from collections import OrderedDict
+from os import makedirs
+from os.path import exists
 from typing import Optional
 
 import numpy as np
@@ -116,20 +118,24 @@ def create_timelapse_gif(out_name, intermediate_steps, shape):
 
 def stippling(im_arr: np.ndarray, k: int, filename: str, out_dir: str, iterations: Optional[int], steps: Optional[int]):
     nodes, intermediate_nodes = tractor_beam(im_arr, k, iterations, steps)
+    output_directory: str = out_dir + filename.split(".")[0] + "_" + str(k) + '/'  # for all output
+    if not exists(output_directory):
+        makedirs(output_directory)
     # Save picture
-    array_to_image(create_dotted_array(nodes, im_arr.shape)).save(out_dir + str(k) + filename)
+    array_to_image(create_dotted_array(nodes, im_arr.shape)).save(output_directory + str(k) +"dotted_" + filename)
     # Save tsp-file
-    write_tsp_file(out_dir + filename.split('.')[0] + str(k) + '.tsp', nodes)
+    write_tsp_file(output_directory +filename.split('.')[0] + '_' + str(k) + '.tsp', nodes)
     # Show all the intermediate steps
     if steps is not None:
-        create_timelapse_gif(out_dir + filename.split('.')[0] + '.gif', intermediate_nodes, im_arr.shape)
+        create_timelapse_gif(output_directory + "dotted_" + filename.split('.')[0] + '.gif', intermediate_nodes, im_arr.shape)
+    return nodes
 
 
 def main(parsed_arguments):
     args = parsed_arguments
     filename = args.input_file.split('/')[-1]
     im_arr = image_to_array(load_image(args.input_file))
-    stippling(im_arr, args.k, filename, args.out_dir, args.iterations, args.steps)
+    return stippling(im_arr, args.k, filename, args.out_dir, args.iterations, args.steps)
 
 
 if __name__ == '__main__':
