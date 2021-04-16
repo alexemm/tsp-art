@@ -16,11 +16,11 @@ def create_tsp_art_from_partial_solutions(tsp_file: str, im_file: Optional[str])
     nodes = read_tsp_file(tsp_file)
     if im_file is not None:
         im_arr = image_to_array(load_image(im_file))
-        size = im_arr.size
+        size = im_arr.T.shape
     else:
         im_arr = None
         size = get_size_of_image(nodes)
-    output_dir: str = f"{tsp_file.split('.')[0]}/nonoptimal_solutions/"
+    output_dir: str = f"{'/'.join(tsp_file.split('/')[:-1])}/nonoptimal_solutions/"
     try:
         makedirs(output_dir)
     except FileExistsError:

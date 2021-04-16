@@ -14,13 +14,13 @@ def create_tsp_art(nodes, solution_tour: List[int], size, im_arr: Optional[any] 
         node2 = nodes[circle[i + 1]]
         thickness = 0
         if im_arr is not None:
-            thickness = get_line_thickness(im_arr, node1, node2)
+            thickness = get_line_thickness(im_arr, node1, node2, im_arr.shape)
         draw.line((node1[0], node1[1], node2[0], node2[1]), fill="black", width=thickness)
     return im
 
 
-def get_line_thickness(im_arr, node1, node2) -> int:
-    pixels_between_line = interpolate_pixels_along_line(node1[1], node1[0], node2[1], node2[0])
+def get_line_thickness(im_arr, node1, node2, shape) -> int:
+    pixels_between_line = [pixel for pixel in interpolate_pixels_along_line(node1[1], node1[0], node2[1], node2[0]) if pixel[0] < shape[0] and pixel[1] < shape[1]]
     values = [im_arr[pixel] for pixel in pixels_between_line]
     av_brightness: float = 1. - sum(values)/ (255. * len(values))
     return round(2 * av_brightness + 1)
