@@ -22,8 +22,8 @@ def determine_datapoint_from_int(i, prev_shape):
 
 def choose_k_points(prob_arr_2d, k, prev_shape):
     chosen_data_values = np.random.choice(range(prob_arr_2d.size), size=k, p=prob_arr_2d.flatten(), replace=False)
-    chosen_data_points = [determine_datapoint_from_int(i, prev_shape) for i in chosen_data_values]
-    return chosen_data_points, chosen_data_values
+    chosen_data_points = np.array([determine_datapoint_from_int(i, prev_shape) for i in chosen_data_values])
+    return chosen_data_points
 
 
 def create_dotted_array(chosen_points, shape):
@@ -33,18 +33,10 @@ def create_dotted_array(chosen_points, shape):
     return dotted_arr
 
 
-def find_closest_point(p, w):
-    distance_to_w = lambda x_1, y_1: np.sqrt((x_1 - w[0]) ** 2 + (y_1 - w[1]) ** 2)
-    min_distance = distance_to_w(p[0][0], p[0][1])
-    closest_point = 0
-    for i, point in enumerate(p):
-        if min_distance == 0:
-            break
-        curr_distance = distance_to_w(point[0], point[1])
-        if curr_distance < min_distance:
-            closest_point = i
-            min_distance = curr_distance
-    return closest_point
+def find_closest_point(nodes, node):
+    deltas = nodes - node
+    dist_2 = np.einsum('ij,ij->i', deltas, deltas)
+    return np.argmin(dist_2)
 
 
 def tractor_beam(arr, k, iterations: Optional[int] = None, intermediate_steps: Optional[int] = None):
@@ -53,19 +45,19 @@ def tractor_beam(arr, k, iterations: Optional[int] = None, intermediate_steps: O
     prob_matr = get_probability_matrix(arr)
     prev_shape = prob_matr.shape
     prob_matr = prob_matr.flatten()
-    p, values = choose_k_points(prob_matr, k, prev_shape)
+    p = choose_k_points(prob_matr, k, prev_shape)
     n = np.zeros(len(p))
     intermediates = OrderedDict() if intermediate_steps is not None else None
     for iteration in range(iterations):
         # 1. Select tractor beam point
-        w = choose_k_points(prob_matr, 1, prev_shape)[0][0]
+        w = choose_k_points(prob_matr, 1, prev_shape)[0]
         # 2. Find closest point to tractor beam point
         i = find_closest_point(p, w)
         # 3. Increment counter for point
         n[i] += 1
         # 4. Adjust point
-        p[i] = int(round(1. / (n[i] + 1.) * w[0] + n[i] / float(n[i] + 1.) * p[i][0])), \
-               int(round(1. / (n[i] + 1.) * w[1] + n[i] / float(n[i] + 1.) * p[i][1]))
+        p[i][0] = int(round(1. / (n[i] + 1.) * w[0] + n[i] / float(n[i] + 1.) * p[i][0]))
+        p[i][1] = int(round(1. / (n[i] + 1.) * w[1] + n[i] / float(n[i] + 1.) * p[i][1]))
         # Print iterations
         if iteration % 100 == 0 or iterations / 2 == iteration:
             print(iteration)
