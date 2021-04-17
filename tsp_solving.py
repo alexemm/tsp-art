@@ -23,7 +23,7 @@ def parse_tsp_file_name():
 
 def write_solution_file(solution: Iterable[AnyStr], file: str):
     with open(file, 'w') as f:
-        f.writelines([str(x) + '\n' for x in solution])
+        f.writelines([str(len(solution)) + '\n'] + [str(x) + '\n' for x in solution])
 
 
 def main(tsp_file: str):

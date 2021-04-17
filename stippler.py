@@ -105,7 +105,7 @@ def create_timelapse_gif(out_name, intermediate_steps, shape):
     im = array_to_image(create_dotted_array(intermediate_steps[0], shape))
     im_arr = [add_iteration_text_to_corner(array_to_image(create_dotted_array(st, shape)), "Iteration: " + str(it)) for
               it, st in intermediate_steps.items()]
-    im.save(out_name, save_all=True, append_images=im_arr, loop=0, duration=200)
+    im.save(out_name, save_all=True, append_images=im_arr, loop=0, duration=500)
 
 
 def stippling(im_arr: np.ndarray, k: int, filename: str, out_dir: str, iterations: Optional[int], steps: Optional[int]):
