@@ -5,14 +5,14 @@ from argparse import ArgumentParser
 
 from image_tools import load_image, image_to_array
 from tsp_solving import read_tsp_file
-from dot_connector.connector import create_tsp_art
+from connector import create_tsp_art
 
 
 def get_size_of_image(nodes: List[Tuple[int, int]]):
     return max(nodes, key=itemgetter(0))[0], max(nodes, key=itemgetter(1))[1]
 
 
-def create_tsp_art_from_partial_solutions(tsp_file: str, im_file: Optional[str]) -> None:
+def create_tsp_art_from_partial_solutions(tsp_file: str, im_file: Optional[str], darkness: bool = False) -> None:
     nodes = read_tsp_file(tsp_file)
     if im_file is not None:
         im_arr = image_to_array(load_image(im_file))
@@ -27,7 +27,7 @@ def create_tsp_art_from_partial_solutions(tsp_file: str, im_file: Optional[str])
         pass
     for i, sol in enumerate(get_solution_files_of_tsp('.')):
         print(f"Solution {i}")
-        create_tsp_art(nodes, read_solution_file(sol), size, im_arr).save(output_dir + f'{i}' + '.jpg')
+        create_tsp_art(nodes, read_solution_file(sol), size, im_arr, darkness).save(output_dir + f'{i}' + '.jpg')
 
 
 def get_solution_files_of_tsp(directory) -> List[str]:
@@ -44,11 +44,12 @@ def define_arguments():
     parser.add_argument("tsp_file", help="TSP file with .tsp ending")
     parser.add_argument("-im", "--image", help="Image for modified line thickness")
     parser.add_argument("--non_optimal", help="Look for non-optimal solution", action="store_true")
+    parser.add_argument("--darkness", help="Option for drawing white lines on black background", action="store_true")
     return parser
 
 
 def main(parsed_arguments):
-    create_tsp_art_from_partial_solutions(parsed_arguments.tsp_file, parsed_arguments.image)
+    create_tsp_art_from_partial_solutions(parsed_arguments.tsp_file, parsed_arguments.image, parsed_arguments.darkness)
 
 
 if __name__ == "__main__":

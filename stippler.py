@@ -10,8 +10,9 @@ from PIL import ImageDraw, ImageFont
 from image_tools import image_to_array, load_image, array_to_image
 
 
-def get_probability_matrix(arr):
-    return (255. - arr) / (255. - arr).sum()
+def get_probability_matrix(arr, darkness: bool = False):
+    brightness_matr = arr if darkness else 255. - arr
+    return brightness_matr / brightness_matr.sum()
 
 
 def determine_datapoint_from_int(i, prev_shape):
@@ -26,10 +27,10 @@ def choose_k_points(prob_arr_2d, k, prev_shape):
     return chosen_data_points
 
 
-def create_dotted_array(chosen_points, shape):
-    dotted_arr = np.zeros(shape) + 255
+def create_dotted_array(chosen_points, shape, darkness: bool = False):
+    dotted_arr = np.zeros(shape) + 255 * (1 - darkness)
     for point in chosen_points:
-        dotted_arr[point[1], point[0]] = 0
+        dotted_arr[point[1], point[0]] = 255 * darkness
     return dotted_arr
 
 
@@ -39,10 +40,11 @@ def find_closest_point(nodes, node):
     return np.argmin(dist_2)
 
 
-def tractor_beam(arr, k, iterations: Optional[int] = None, intermediate_steps: Optional[int] = None):
+def tractor_beam(arr, k, iterations: Optional[int] = None, intermediate_steps: Optional[int] = None,
+                 darkness: bool = False):
     iterations = iterations or 10000
     intermediate_result_steps = intermediate_steps or (iterations + 1)
-    prob_matr = get_probability_matrix(arr)
+    prob_matr = get_probability_matrix(arr, darkness)
     prev_shape = prob_matr.shape
     prob_matr = prob_matr.flatten()
     p = choose_k_points(prob_matr, k, prev_shape)
@@ -90,36 +92,39 @@ def define_arguments() -> ArgumentParser:
     parser.add_argument("-it", "--iterations", help="Number of iterations to clean image. Default is 10000", type=int)
     parser.add_argument("-st", "--steps", help="Number of intermediate steps which will be printed in to an image",
                         type=int)
+    parser.add_argument("--darkness", help="Option for drawing white lines on black background", action="store_true")
     # parser.add_argument("--seed", help="Random seed")
     return parser
 
 
-def add_iteration_text_to_corner(im, text):
+def add_iteration_text_to_corner(im, text, darkness: bool = False):
     draw = ImageDraw.Draw(im)
     font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 20)
-    draw.text((0, 0), text, 0, font=font)
+    draw.text((0, 0), text, 255 * darkness, font=font)
     return im
 
 
-def create_timelapse_gif(out_name, intermediate_steps, shape):
-    im = array_to_image(create_dotted_array(intermediate_steps[0], shape))
-    im_arr = [add_iteration_text_to_corner(array_to_image(create_dotted_array(st, shape)), "Iteration: " + str(it)) for
+def create_timelapse_gif(out_name, intermediate_steps, shape, darkness: bool = False):
+    im = array_to_image(create_dotted_array(intermediate_steps[0], shape, darkness))
+    im_arr = [add_iteration_text_to_corner(array_to_image(create_dotted_array(st, shape, darkness)), "Iteration: " + str(it), darkness) for
               it, st in intermediate_steps.items()]
     im.save(out_name, save_all=True, append_images=im_arr, loop=0, duration=500)
 
 
-def stippling(im_arr: np.ndarray, k: int, filename: str, out_dir: str, iterations: Optional[int], steps: Optional[int]):
-    nodes, intermediate_nodes = tractor_beam(im_arr, k, iterations, steps)
+def stippling(im_arr: np.ndarray, k: int, filename: str, out_dir: str, iterations: Optional[int], steps: Optional[int],
+              darkness: bool = False):
+    nodes, intermediate_nodes = tractor_beam(im_arr, k, iterations, steps, darkness)
     output_directory: str = out_dir + filename.split(".")[0] + "_" + str(k) + '/'  # for all output
     if not exists(output_directory):
         makedirs(output_directory)
     # Save picture
-    array_to_image(create_dotted_array(nodes, im_arr.shape)).save(output_directory + str(k) +"dotted_" + filename)
+    array_to_image(create_dotted_array(nodes, im_arr.shape, darkness)).save(output_directory + str(k) + "dotted_" + filename)
     # Save tsp-file
-    write_tsp_file(output_directory +filename.split('.')[0] + '_' + str(k) + '.tsp', nodes)
+    write_tsp_file(output_directory + filename.split('.')[0] + '_' + str(k) + '.tsp', nodes)
     # Show all the intermediate steps
     if steps is not None:
-        create_timelapse_gif(output_directory + "dotted_" + filename.split('.')[0] + '.gif', intermediate_nodes, im_arr.shape)
+        create_timelapse_gif(output_directory + "dotted_" + filename.split('.')[0] + '.gif', intermediate_nodes,
+                             im_arr.shape, darkness)
     return nodes
 
 
@@ -127,7 +132,7 @@ def main(parsed_arguments):
     args = parsed_arguments
     filename = args.input_file.split('/')[-1]
     im_arr = image_to_array(load_image(args.input_file))
-    return stippling(im_arr, args.k, filename, args.out_dir, args.iterations, args.steps)
+    return stippling(im_arr, args.k, filename, args.out_dir, args.iterations, args.steps, args.darkness)
 
 
 if __name__ == '__main__':

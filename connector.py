@@ -3,26 +3,31 @@ from typing import List, Optional
 from PIL import Image, ImageDraw
 
 import math
+import numpy as np
 
 
-def create_tsp_art(nodes, solution_tour: List[int], size, im_arr: Optional[any] = None) -> Image:
-    im = Image.new('RGB', size, (255, 255, 255, 0))
+def create_tsp_art(nodes, solution_tour: List[int], size, im_arr: Optional[any] = None, darkness: bool = False) -> Image:
+    im = Image.new('L', size, 255 * (1 - darkness))
     draw = ImageDraw.Draw(im)
-    circle = solution_tour + [solution_tour[0]]
+    circle = np.array(solution_tour)
+    np.append(circle, solution_tour[0])
     for i, node in enumerate(circle[:-1]):
         node1 = nodes[node]
         node2 = nodes[circle[i + 1]]
         thickness = 0
+        line_fill = 255 * darkness
         if im_arr is not None:
-            thickness = get_line_thickness(im_arr, node1, node2, im_arr.shape)
-        draw.line((node1[0], node1[1], node2[0], node2[1]), fill="black", width=thickness)
+            thickness = get_line_thickness(im_arr, node1, node2, im_arr.shape, darkness)
+        draw.line((node1[0], node1[1], node2[0], node2[1]), fill=line_fill, width=thickness)
     return im
 
 
-def get_line_thickness(im_arr, node1, node2, shape) -> int:
+def get_line_thickness(im_arr, node1, node2, shape, darkness: bool = False) -> int:
     pixels_between_line = [pixel for pixel in interpolate_pixels_along_line(node1[1], node1[0], node2[1], node2[0]) if pixel[0] < shape[0] and pixel[1] < shape[1]]
     values = [im_arr[pixel] for pixel in pixels_between_line]
-    av_brightness: float = 1. - sum(values)/ (255. * len(values))
+    av_brightness: float = sum(values) / (255. * len(values))
+    if not darkness:
+        av_brightness = 1. - av_brightness
     return round(2 * av_brightness + 1)
 
 

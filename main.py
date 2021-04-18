@@ -1,4 +1,4 @@
-from dot_connector.connector import create_tsp_art
+from connector import create_tsp_art
 from solution_handler import get_size_of_image
 from image_tools import image_to_array, load_image
 from stippler import define_arguments, main as stippling_main
@@ -18,6 +18,7 @@ def main(parsed_args):
     filename = parsed_args.input_file.split('/')[-1]
     filename_no_postfix = filename.split('.')[0]
     k = parsed_args.k
+    darkness: bool = parsed_args.darkness
     output_directory: str = parsed_args.out_dir + filename_no_postfix + "_" + str(k) + '/'  # for all output
     solution = solving_main(output_directory + filename_no_postfix + '_' + str(k) + '.tsp')
     if parsed_args.thickness:
@@ -26,8 +27,7 @@ def main(parsed_args):
     else:
         im_arr = None
         shape = get_size_of_image(nodes)
-    print(shape)
-    create_tsp_art(nodes, solution, shape, im_arr).save(output_directory + filename_no_postfix + "_" + str(k) + ".png")
+    create_tsp_art(nodes, solution, shape, im_arr, darkness).save(output_directory + filename_no_postfix + "_" + str(k) + ".png")
 
 
 if __name__ == "__main__":
