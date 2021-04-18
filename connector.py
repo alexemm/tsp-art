@@ -1,12 +1,12 @@
+import math
 from typing import List, Optional
 
+import numpy as np
 from PIL import Image, ImageDraw
 
-import math
-import numpy as np
 
-
-def create_tsp_art(nodes, solution_tour: List[int], size, im_arr: Optional[any] = None, darkness: bool = False) -> Image:
+def create_tsp_art(nodes, solution_tour: List[int], size, im_arr: Optional[any] = None,
+                   darkness: bool = False) -> Image:
     im = Image.new('L', size, 255 * (1 - darkness))
     draw = ImageDraw.Draw(im)
     circle = np.array(solution_tour)
@@ -23,7 +23,8 @@ def create_tsp_art(nodes, solution_tour: List[int], size, im_arr: Optional[any] 
 
 
 def get_line_thickness(im_arr, node1, node2, shape, darkness: bool = False) -> int:
-    pixels_between_line = [pixel for pixel in interpolate_pixels_along_line(node1[1], node1[0], node2[1], node2[0]) if pixel[0] < shape[0] and pixel[1] < shape[1]]
+    pixels_between_line = [pixel for pixel in interpolate_pixels_along_line(node1[1], node1[0], node2[1], node2[0]) if
+                           pixel[0] < shape[0] and pixel[1] < shape[1]]
     values = [im_arr[pixel] for pixel in pixels_between_line]
     av_brightness: float = sum(values) / (255. * len(values))
     if not darkness:

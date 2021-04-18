@@ -106,8 +106,9 @@ def add_iteration_text_to_corner(im, text, darkness: bool = False):
 
 def create_timelapse_gif(out_name, intermediate_steps, shape, darkness: bool = False):
     im = array_to_image(create_dotted_array(intermediate_steps[0], shape, darkness))
-    im_arr = [add_iteration_text_to_corner(array_to_image(create_dotted_array(st, shape, darkness)), "Iteration: " + str(it), darkness) for
-              it, st in intermediate_steps.items()]
+    im_arr = [
+        add_iteration_text_to_corner(array_to_image(create_dotted_array(st, shape, darkness)), "Iteration: " + str(it),
+                                     darkness) for it, st in intermediate_steps.items()]
     im.save(out_name, save_all=True, append_images=im_arr, loop=0, duration=500)
 
 
@@ -118,7 +119,8 @@ def stippling(im_arr: np.ndarray, k: int, filename: str, out_dir: str, iteration
     if not exists(output_directory):
         makedirs(output_directory)
     # Save picture
-    array_to_image(create_dotted_array(nodes, im_arr.shape, darkness)).save(output_directory + str(k) + "dotted_" + filename)
+    array_to_image(create_dotted_array(nodes, im_arr.shape, darkness)).save(
+        output_directory + str(k) + "dotted_" + filename)
     # Save tsp-file
     write_tsp_file(output_directory + filename.split('.')[0] + '_' + str(k) + '.tsp', nodes)
     # Show all the intermediate steps

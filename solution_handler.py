@@ -1,11 +1,11 @@
+from argparse import ArgumentParser
 from operator import itemgetter
 from os import listdir, makedirs
 from typing import List, Optional, Tuple
-from argparse import ArgumentParser
 
+from connector import create_tsp_art
 from image_tools import load_image, image_to_array
 from tsp_solving import read_tsp_file
-from connector import create_tsp_art
 
 
 def get_size_of_image(nodes: List[Tuple[int, int]]):

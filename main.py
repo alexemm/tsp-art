@@ -1,6 +1,6 @@
 from connector import create_tsp_art
-from solution_handler import get_size_of_image
 from image_tools import image_to_array, load_image
+from solution_handler import get_size_of_image
 from stippler import define_arguments, main as stippling_main
 from tsp_solving import main as solving_main
 
@@ -27,7 +27,8 @@ def main(parsed_args):
     else:
         im_arr = None
         shape = get_size_of_image(nodes)
-    create_tsp_art(nodes, solution, shape, im_arr, darkness).save(output_directory + filename_no_postfix + "_" + str(k) + ".png")
+    create_tsp_art(nodes, solution, shape, im_arr, darkness).save(
+        output_directory + filename_no_postfix + "_" + str(k) + ".png")
 
 
 if __name__ == "__main__":
