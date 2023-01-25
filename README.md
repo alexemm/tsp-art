@@ -2,7 +2,8 @@
 
 With this project, you can replicate real images as TSP art where the whole picture is just one line.
 ![Original Image: "Yosh beeg original"](https://static.wikia.nocookie.net/supermarioglitchy4/images/5/59/Beeg_Yoshi.png/revision/latest?cb=20211222200333)
-first gets a dotted version:
+
+The dotted version after stippling done on it:
 ![Original Image: "Yosh beeg dotted"](https://github.com/alexemm/tsp-art/blob/main/output/beeg_1548/1548dotted_beeg.jpg)
 
 And the final result:
